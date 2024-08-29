@@ -115,9 +115,17 @@ class rotorblade:
         torque = np.trapz(dQ,r)
         power = torque*data['omega']
 
+        #print(data['omega'])
+
         non_dims = {}
         non_dims['CT'] = 2 * thrust * data['number_of_blades'] / (rho * np.pi * self.radius**4 * data['omega']**2)
         non_dims['sigma'] = data['number_of_blades']*chord[0]*(self.radius-self.root_cutout)/(np.pi*self.radius**2)
+        non_dims['T_sigma']=non_dims['CT']/(non_dims['sigma']**2)
+        non_dims['C_q']=(2*torque)/(np.pi * self.radius**5 * data['omega']**2 * rho)
+        #((2*torque)/(np.pi * self.radius**5 * data['omega']**2 * rho))
+        non_dims['C_q_dash']=non_dims['C_q']-(0.0113*non_dims['sigma']/4)
+        non_dims['Q_sigma']=non_dims['C_q']/non_dims['sigma']**3
+        non_dims['Q_sigma_dash']=non_dims['C_q_dash']/non_dims['sigma']**3
 
         response.add_payload({'thrust':thrust, 'torque':torque, 'power':power})
         response.add_payload({'non_dims':non_dims})
