@@ -1,5 +1,4 @@
 from __init__ import *
-import time
 
     
 def simulator(collective):
