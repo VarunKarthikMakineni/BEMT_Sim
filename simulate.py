@@ -1,6 +1,7 @@
 from __init__ import *
 import time
 
+    
 def simulator(collective):
     atmos = {'temperature': 15, 'pressure': 101325, 'density': 1.225}
     rot = rotor.rotor('input_files/simple_rotor.json')
