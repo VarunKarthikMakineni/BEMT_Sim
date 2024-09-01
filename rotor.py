@@ -20,8 +20,7 @@ class rotor:
             self.blade_file_path = raw_data['blade_file_path']
             self.blade = blade.rotorblade(self.blade_file_path)
 
-            self.omega = raw_data['omega']         
-            #print(self.omega)                  # May be changed by the simulator program later, constant for now
+            self.omega = raw_data['omega']     # May be changed by the simulator program later, constant for now
             self.number_of_blades = raw_data['number_of_blades']
 
     def get_performance(self, control_msg: message.simMessage):
@@ -47,6 +46,9 @@ class rotor:
 
         response = message.simMessage()
         response.add_payload(blade_performance.get_payload())
+        response.payload["thrust"]*=self.number_of_blades
+        response.payload["torque"]*=self.number_of_blades
+        response.payload["power"]*=self.number_of_blades
 
         return response
     
