@@ -108,7 +108,7 @@ plt.loglog(T_vs_Q_exp_4blade[1],T_vs_Q_exp_4blade[0],'--',label='4-blade rotor e
 plt.loglog(T_vs_Q_exp_5blade[1],T_vs_Q_exp_5blade[0],'--',label='5-blade rotor experiment')
 
 plt.legend()
-plt.title('Logarithmic grpah of Thrust vs Torque')
+plt.title('Logarithmic graph of Thrust vs Torque')
 plt.xlabel('$Q_{sigma}^\'$')
 plt.ylabel('$T_{sigma}$')
 plt.grid(True,which="both",ls="-")
