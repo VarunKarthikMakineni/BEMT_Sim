@@ -46,6 +46,9 @@ class rotor:
 
         response = message.simMessage()
         response.add_payload(blade_performance.get_payload())
+        response.payload["thrust"]*=self.number_of_blades
+        response.payload["torque"]*=self.number_of_blades
+        response.payload["power"]*=self.number_of_blades
 
         return response
     

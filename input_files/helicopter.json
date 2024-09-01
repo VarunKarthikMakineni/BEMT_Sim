@@ -1,0 +1,13 @@
+{"rotor_file_path": "input_files/heli_main_rotor.json",
+ "tail_rotor_file_path": "input_files/heli_tail_rotor.json",
+ "dry_mass": 100,
+ "initial_fuel_mass": 50,
+ "payload_mass":0,
+ "times":[0,60000],
+ "altitudes":[0,2000],
+ "engine_efficiency":1.1,
+ "xmrcg":0.3,
+ "xtrcg":3,
+ "zmrcg":1.5,
+ "ztrcg":0.5
+}
