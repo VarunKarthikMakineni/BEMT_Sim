@@ -10,6 +10,9 @@ PRANDTL_TIPLOSS_TOLERANCE = 1e-6
 
 ENGINE_CEILING_TOLERANCE = 500 #m
 ENGINE_OVERLOAD_FACTOR = 1.1
+dT=60 #seconds
+g=9.8 #m/s^2
+pi=np.pi
 
 import time
 import message
@@ -17,3 +20,4 @@ import atmosphere
 import airfoil
 import blade
 import rotor
+import powerplant
