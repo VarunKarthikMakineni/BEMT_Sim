@@ -1,6 +1,5 @@
 from __init__ import *
-from scipy.optimize import fsolve
-import matplotlib.pyplot as plt
+
 class flight_dynamics:
     
     def __init__(self, helicopter_file_path):
@@ -50,7 +49,7 @@ class flight_dynamics:
         self.rotor_collective=main_rotor_collective
         self.tail_collective=tail_rotor_collective
         main_rotor,tail_rotor=self.main()
-        return main_rotor.payload['torque']
+        return main_rotor.payload['torque']-tail_rotor.payload["thrust"]*self.xtrcg
 
     def moment_x(self,main_rotor_collective,tail_rotor_collective,climb_vel=0,altitude=0):
         self.climb_vel=climb_vel
@@ -96,7 +95,7 @@ class flight_dynamics:
 
 class mission_planner:
 
-    def __init__(self, helicopter_file_path):
+    def __init__(self, helicopter_file_path,override_weight=False,new_gross_weight=0):
         self.helicopter_data_file=helicopter_file_path
         with open(self.helicopter_data_file) as file:
                 self.raw_data = json.load(file)
@@ -109,14 +108,16 @@ class mission_planner:
         self.times=self.raw_data["times"]
         self.altitudes=self.raw_data["altitudes"]
         self.current_altitude=[self.altitudes[0]]
-        self.climb_vel=[0]
+        self.climb_vel=[]
         self.current_time=[0]
         self.current_mass=[self.dry_mass+self.initial_fuel_mass+self.payload_mass]
-        self.fuel_burn_rate=[0]
-        self.rotor_collective=[0]
-        self.tail_collective=[0]
-        self.power=[0]
-        self.upward_force=[0]
+        if override_weight:
+            self.current_mass=[new_gross_weight]
+        self.fuel_burn_rate=[]
+        self.rotor_collective=[]
+        self.tail_collective=[]
+        self.power=[]
+        self.upward_force=[]
         self.engine=powerplant.powerplant()
 
     def main(self):
@@ -133,14 +134,14 @@ class mission_planner:
                     print(self.current_time[-1])
                     #updating helicopter parameters
 
-                    self.fuel_mass.append(self.fuel_mass[-1]-self.fuel_burn_rate[-1]*60)
-                    self.current_altitude.append(self.current_altitude[-1]+self.climb_vel[-1]*60)
-                    self.current_mass.append(self.current_mass[-1]-self.fuel_burn_rate[-1]*60)
-                    self.current_time.append(self.current_time[-1]+60)
+                    self.fuel_mass.append(self.fuel_mass[-1]-self.fuel_burn_rate[-1]*dT)
+                    self.current_altitude.append(self.current_altitude[-1]+self.climb_vel[-1]*dT)
+                    self.current_mass.append(self.current_mass[-1]-self.fuel_burn_rate[-1]*dT)
+                    self.current_time.append(self.current_time[-1]+dT)
                     if self.fuel_mass[-1]<0:
                         output_message.add_error({"Error":"Helicopter out of fuel"})
                         break
-        output_message.add_payload({"Altitudes":self.current_altitude,"Mass":self.current_mass,"Time":self.current_time,"Main_collective":self.rotor_collective,"Tail_collective":self.tail_collective,"Thrust":self.upward_force,"Power_required":self.power}) 
+        output_message.add_payload({"Altitudes":self.current_altitude,"Mass":self.current_mass,"Time":self.current_time,"Main_collective":self.rotor_collective,"Tail_collective":self.tail_collective,"Thrust":self.upward_force,"Power_required":self.power,"Fuel_burn_rate":self.fuel_burn_rate}) 
         return output_message
     
     def hover_and_climb(self,i):
@@ -161,61 +162,23 @@ class mission_planner:
         main=0
         tail=0
         n=1000
-        for i in range(0,301,10):
+        for i in range(0,301,1):
             if self.heli.force_z(i/n,0,self.climb_vel[-1],self.current_altitude[-1])>self.current_mass[-1]*g:
                 main=i/n
                 break
-        for i in range(0,300,10):
+        for i in range(0,300,1):
             if self.heli.moment_z(main,i/n,self.climb_vel[-1],self.current_altitude[-1])>self.current_mass[-1]*g:
                 tail=i/n
                 break
         return main,tail
         #return fsolve(self.heli.hover,[0,0],(self.climb_vel[-1],self.current_altitude[-1],self.current_mass[-1],0),epsfcn=0.001,factor=0.1)
-    
+
+'''
 heli=mission_planner("input_files/helicopter.json")
 out=heli.main()
-#print(out.payload["Power_required"])
-plt.plot(out.payload["Power_required"])
-plt.show()
-'''    
-    def main(self):
-        
-        output_message=message.simMessage()
-        for i in range(0, len(self.times)-1):
-            print(i)
-            control_message=message.simMessage()
-            atm=atmosphere.ISA()
-            self.engine=powerplant.powerplant()
-            control_message.add_payload({"atmosphere":atm.get_atmosphere(self.current_altitude[-1]).payload})
-            if self.current_altitude[-1]!=self.altitudes[i]:
-                control_message.add_payload(self.hover_and_climb(control_message,i))
-            altitude=self.current_altitude[-1]
-            control_message.add_payload({"altitude": altitude})
-            control_message.add_payload({"temp_dev_isa": 0})
-            control_message.add_payload({"power_required": control_message.payload['power']})
-            self.fuel_burn_rate.append(self.engine.get_fuel_rate(control_message).payload['fuel_burn_rate'])
-            self.fuel_weight.append(self.fuel_weight[-1]-self.fuel_burn_rate[-1]*60)
-            self.current_altitude.append(self.altitudes[-1]+self.climb_rate[-1]*60)
-            self.current_weight.append(self.current_weight[-1]-self.fuel_burn_rate[-1]*60)
-            self.current_time.append(self.current_time[-1]+60)
-            if self.fuel_weight[-1]<0:
-                output_message.add_error({"Error":"Helicopter out of fuel"})
-                break
-        output_message.add_payload({"Altitudes":self.current_altitude,"Weight":self.current_weight,"Time":self.current_time}) 
-        return output_message
-     
-    def hover_and_climb(self, control_message,i):
-         self.climb_rate.append((self.altitudes[i+1]-self.current_altitude[-1])/(self.times[i+1]-self.current_time[-1]))
-         control_message.add_payload({"climb_vel":self.climb_rate[-1]})
-         control_message.add_payload({"collective":self.rotor_collective})
-         #print(control_message.payload['atmosphere'])
-         result=self.rot.get_performance(control_message)
-         return result.payload
-
-
-heli=mission_planner("input_files/helicopter.json")
-output=heli.main()
-print(output.payload['Altitudes'])
-print(output.payload['Weight'])
-print(output.payload['Time'])
+print(out.payload["Power_required"])
+#ax=plt.Axes()
+#plt.plot(out.payload["Mass"])
+#ax.plot(out.payload["Power_required"])
+#plt.show()
 '''
