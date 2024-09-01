@@ -1,7 +1,5 @@
 import numpy as np
 import json
-from scipy.optimize import fsolve
-import matplotlib.pyplot as plt
 
 ###### ENVIRONMENT VARIABLES ######
 
