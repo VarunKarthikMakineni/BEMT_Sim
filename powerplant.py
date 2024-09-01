@@ -37,7 +37,7 @@ ENGINE_DATA = {
 
 class powerplant:
 
-    def __init__(self, powerplant_data_file):
+    def __init__(self):
             
             pass
 
