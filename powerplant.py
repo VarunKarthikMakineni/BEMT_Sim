@@ -37,7 +37,7 @@ ENGINE_DATA = {
 
 class powerplant:
 
-    def __init__(self, powerplant_data_file):
+    def __init__(self):#, powerplant_data_file):
             
             pass
 
@@ -72,11 +72,11 @@ class powerplant:
         sfc_upper = np.interp(sim_data['temp_dev_isa'], temp_dev_x, ENGINE_DATA['sfc'][alt_upper])
         sfc = np.interp(sim_data['altitude'], [alt_lower, alt_upper], [sfc_lower, sfc_upper]) #kg/kWh
 
-        if sim_data['power_required'] > peak_power:
-            response.add_warning({'Overload':'Power required exceeds peak power of the engine.'})
+        if sim_data['power_required']/1000 > peak_power:
+            response.add_warning({'Overload':f'Power required exceeds peak power of the engine: {sim_data["power_required"]/1000:.0f}kW'})
         
-        if sim_data['power_required'] > peak_power * ENGINE_OVERLOAD_FACTOR:
-            response.add_error({'Overload':'Power required exceeds peak power of the engine.'})
+        if sim_data['power_required']/1000 > peak_power * ENGINE_OVERLOAD_FACTOR:
+            response.add_error({'Overload':f'Power required exceeds peak power of the engine: {sim_data["power_required"]/1000:.0f}kW'})
         
         fuel_burn_rate = sim_data['power_required']/1000 * sfc / 3600 #kg/s
         throttle = sim_data['power_required']/peak_power/1000 * 100
